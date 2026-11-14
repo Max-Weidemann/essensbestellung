@@ -1,61 +1,46 @@
-from pathlib import Path
-
 from flask import Flask, render_template, request
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session
+from sqlalchemy import select
 
-from models import Order
+from database import SessionLocal
+from models import Order, User
 
 app = Flask(__name__)
 
-BASE_DIR = Path(__file__).resolve().parent
-DATABASE_PATH = BASE_DIR / "essensbestellung.db"
-
-engine = create_engine(f"sqlite:///{DATABASE_PATH.as_posix()}", echo=True)
+TEST_USER_ID = 1
 
 menus = [
-    {"day": "Montag", "date": "09.11.2026", "date_iso": "2026-11-09", "menu_1": "Spaghetti Bolognese", "menu_2": "Gemüse-Curry"},
-    {"day": "Dienstag", "date": "10.11.2026", "date_iso": "2026-11-10", "menu_1": "Kartoffelauflauf", "menu_2": "Gemüselasagne"},
-    {"day": "Mittwoch", "date": "11.11.2026", "date_iso": "2026-11-11", "menu_1": "Chili sin Carne", "menu_2": "Nudelauflauf"},
-    {"day": "Donnerstag", "date": "12.11.2026", "date_iso": "2026-11-12", "menu_1": "Kürbissuppe", "menu_2": "Pilzrisotto"},
-    {"day": "Freitag", "date": "13.11.2026", "date_iso": "2026-11-13", "menu_1": "Ofenkartoffeln", "menu_2": "Gemüsepfanne"},
+    {"day": "Montag", "date": "16.11.2026", "date_iso": "2026-11-16", "menu_1": "Spaghetti Bolognese", "menu_2": "Gemüse-Curry"},
+    {"day": "Dienstag", "date": "17.11.2026", "date_iso": "2026-11-17", "menu_1": "Kartoffelauflauf", "menu_2": "Gemüselasagne"},
+    {"day": "Mittwoch", "date": "18.11.2026", "date_iso": "2026-11-18", "menu_1": "Chili sin Carne", "menu_2": "Nudelauflauf"},
+    {"day": "Donnerstag", "date": "19.11.2026", "date_iso": "2026-11-19", "menu_1": "Kürbissuppe", "menu_2": "Pilzrisotto"},
+    {"day": "Freitag", "date": "20.11.2026", "date_iso": "2026-11-20", "menu_1": "Ofenkartoffeln", "menu_2": "Gemüsepfanne"},
 ]
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
-    if request.method == "POST":
-        orders = {}
+    with SessionLocal() as session:
+        user = session.get(User, TEST_USER_ID)
 
-        for menu in menus:
-            date = menu["date_iso"]
-            field_name = f"essen_{date}"
-            selection = request.form.get(field_name)
+        if user is None:
+            return  "User not found", 404
 
-            if selection in ("menu_1", "menu_2", "none"):
-                orders[date] = selection
+        statement = select(Order).where(
+            Order.user_id == TEST_USER_ID
+        )
 
-        with Session(engine) as session:
-            for date, selection in orders.items():
-                statement = select(Order).where(Order.date == date)
+        orders = session.scalars(statement).all()
 
-                existing_order = session.execute(statement).scalar_one_or_none()
+        selected_menus = {}
 
-                if selection == "none":
-                    if existing_order is not None:
-                        session.delete(existing_order)
-                elif existing_order is None:
-                    order = Order(date=date, menu=selection)
-                    session.add(order)
-                else:
-                    existing_order.menu = selection
+        for order in orders:
+            selected_menus[order.date] = order.menu
 
-            session.commit()
-
-        print("Submitted orders:")
-        print(orders)
-
-    return render_template("index.html", menus=menus)
+    return render_template(
+        "index.html",
+        menus=menus,
+        selected_menus=selected_menus,
+    )
 
 
 if __name__ == "__main__":
