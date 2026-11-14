@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Essensbestellung</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <h1>Essensbestellung</h1>
+    <h2>Woche vom 09.11. bis 13.11.2026</h2>
+    <p>Für diese Woche sind {{ menus | length }} Tage verfügbar.</p>
+
+    <form method="post">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Tag</th><th>Menü 1</th><th>Menü 2</th><th>Keine Bestellung</th></tr>
+          </thead>
+          <tbody>
+            {% for menu in menus %}
+            <tr>
+              <th scope="row">{{ menu.day }}, {{ menu.date }}</th>
+              <td><label><input type="radio" name="essen_{{ menu.date_iso }}" value="menu_1"> {{ menu.menu_1 }}</label></td>
+              <td><label><input type="radio" name="essen_{{ menu.date_iso }}" value="menu_2"> {{ menu.menu_2 }}</label></td>
+              <td><label><input type="radio" name="essen_{{ menu.date_iso }}" value="none" checked> Keine Bestellung</label></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p><button type="submit">Bestellung speichern</button></p>
+    </form>
+  </main>
+</body>
+</html>

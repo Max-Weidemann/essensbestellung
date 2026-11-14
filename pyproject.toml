@@ -1,0 +1,12 @@
+[project]
+name = "essensbestellung"
+version = "0.1.0"
+description = "Rekonstruierter Lernstand einer Flask-Essensbestellung"
+requires-python = ">=3.10"
+dependencies = [
+    "Flask>=3.1,<4",
+    "sqlalchemy>=2.0,<3",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
