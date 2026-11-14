@@ -1,8 +1,5 @@
-from sqlalchemy import create_engine
-
-from models import Base, Order
-
-engine = create_engine("sqlite:///essensbestellung.db", echo=True)
+from database import engine
+from models import Base, Order, User
 
 Base.metadata.create_all(engine)
 
